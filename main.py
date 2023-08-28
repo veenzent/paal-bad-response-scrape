@@ -1,7 +1,69 @@
 import connection as conn
 
+
+# function to parse json date
+class DateTimeEncoder(conn.json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, conn.datetime):
+            return o.isoformat()
+
+        if isinstance(o, bytes):
+            return list(o)
+
+        return conn.json.JSONEncoder.default(self, o)
+
+# function to get channel_messages
+async def main(phone):
+    await conn.client.start()
+    print("Client Created")
+    # Ensure you're authorized
+    if await conn.client.is_user_authorized() == False:
+        await conn.client.send_code_request(phone)
+        try:
+            await conn.client.sign_in(phone, input('Enter the code: '))
+        except conn.SessionPasswordNeededError:
+            await conn.client.sign_in(password=input('Password: '))
+
+    me = await conn.client.get_me()
+
+    channel = await conn.client.get_entity(conn.entity)
+    all_messages = []
+    limit = 100
+    offset_id = 0   # ID of message to start retrieving messages
+    total_messages = 0
+
+    while True:
+        history = await conn.client(conn.GetHistoryRequest(
+            peer = channel,
+            offset_date = None,   # date to start retrieving messages from
+            add_offset = 0,
+            offset_id = offset_id,
+            limit = limit,
+            max_id=0,
+            min_id=0,
+            hash=0
+        ))
+        if not history.messages:
+            break   
+        messages = history.messages
+
+        for message in messages:
+            all_messages.append(message.to_dict())
+
+        total_messages = len(all_messages)
+        offset_id = messages[len(messages) - 1].id
+        print(f"Total messages: {total_messages}\noffset_id: {offset_id}")        
+
+    with open("channel_messagesaaaa.json", "w") as channel_messages_file:
+        conn.json.dump(all_messages, channel_messages_file, cls=DateTimeEncoder)
+
+with conn.client:
+    conn.client.loop.run_until_complete(main(conn.phone))
+
+
+
 # messages from chat history - channel_messages.json
-with open('./telegram-analysis/channel_messages.json') as file:
+with open('./channel_messages.json') as file:
     all_messages = conn.json.load(file)
 
 
@@ -27,9 +89,8 @@ for message in all_messages:
 with open('prompt_ids_before.json', 'w') as promptIds:
     conn.json.dump(prompt_ids_before, promptIds)
 
-size = 20
 serial_no = 1
-while size >= 1:
+while len(prompt_ids_before) > 1:
     for ids in prompt_ids_before:
         prompt_id = ids['id_of_msg_being_replied']
         reply_id = ids['paal_reply_id']
@@ -55,13 +116,10 @@ while size >= 1:
             except AttributeError:
                 pass
         prompt_ids_before.remove(ids)
-        size = len(prompt_ids_before)
         serial_no += 1
-        print(f"size: {size}")
         print(f"length_of_prompt_ids: {len(prompt_ids_before)}")
         print(f"length_of_unanswered_messages: {len(unanswered_messages)}")
-        print(f"Total: {len(prompt_ids_before)} + {len(unanswered_messages)} = {len(prompt_ids_before) + len(unanswered_messages)}") # 4706
-
+        print(f"Total: {len(prompt_ids_before)} + {len(unanswered_messages)} = {len(prompt_ids_before) + len(unanswered_messages)}")
 
     # json file of paal_reply_ids and ids of message being replied to
     with open('prompt_ids_after.json', 'w') as promptIds:

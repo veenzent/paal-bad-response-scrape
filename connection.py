@@ -29,8 +29,8 @@ username = config['Telegram']['username']
 client = TelegramClient(username, api_id, api_hash)
 
 
-# user_input_channel = input('enter entity (telegram channel name or channel id):')
-# entity = client.get_entity(user_input_channel)
+user_input_channel = input('enter entity (telegram channel name or channel id):')
+entity = client.get_entity(user_input_channel)
 
-# if the entity above doesn't work, just comment it out, uncomment this one below then insert your channel ID in config.ini
-entity = -config['Telegram']['channel_id']     # <--- BetaTesters channel for Paal
+# if the entity above doesn't work, comment it out, uncomment this one below then insert your channel ID in config.ini
+# entity = config['Telegram']['channel_id']

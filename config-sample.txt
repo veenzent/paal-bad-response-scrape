@@ -1,0 +1,11 @@
+# create a config.ini file and copy the contents of this file into it.
+[Telegram]
+
+# you can get telegram development credentials in telegram API Development Tools
+api_id = # your api id
+api_hash = # your api hash
+
+# use full phone number including + and country code
+phone = # your phone number
+username = # your username
+channel_id = # your channel id e.g 1004582315982
